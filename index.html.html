@@ -2,11 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#f5f0eb"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>AND you — Architecture Personality Quiz</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   :root{
     --cream:#f5f0eb;
     --ink:#1a1614;
@@ -18,17 +22,19 @@
     --lavender:#8a7faa;
     --teal:#4a8f8a;
   }
-  html,body{width:100%;height:100%;overflow:hidden;background:var(--cream);font-family:'DM Sans',sans-serif;}
+  html,body{width:100%;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;background:var(--cream);font-family:'DM Sans',sans-serif;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 
   /* ─── SCREENS ─── */
-  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease,transform .5s ease;opacity:0;pointer-events:none;transform:translateY(20px);}
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;justify-content:safe center;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);transition:opacity .5s ease,transform .5s ease;opacity:0;pointer-events:none;transform:translateY(20px);}
   .screen.active{opacity:1;pointer-events:all;transform:translateY(0);}
 
   /* ─── BUBBLE LAYER ─── */
   #bubble-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
-  .bubble{position:absolute;border-radius:50%;cursor:pointer;pointer-events:all;transition:transform .1s;}
-  .bubble:hover{transform:scale(1.08);}
+  .bubble{position:absolute;border-radius:50%;cursor:pointer;pointer-events:all;touch-action:manipulation;transition:transform .1s;}
   .bubble.popping{transform:scale(1.35);opacity:0;transition:transform .26s cubic-bezier(.2,.8,.3,1),opacity .26s ease-out;pointer-events:none;}
+  @media (hover:hover) and (pointer:fine){
+    .bubble:hover{transform:scale(1.08);}
+  }
 
   /* ─── START SCREEN ─── */
   #start-screen{z-index:10;background:transparent;}
@@ -46,8 +52,11 @@
   .start-desc{font-family:'DM Sans',sans-serif;font-size:13px;color:#7a6e68;margin-top:18px;max-width:360px;line-height:1.7;letter-spacing:.3px;}
   .start-pills{display:flex;gap:16px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
   .pill{background:rgba(255,255,255,.55);backdrop-filter:blur(8px);border:1px solid rgba(196,97,58,.25);border-radius:40px;padding:7px 18px;font-size:12px;font-weight:600;color:var(--terracotta);letter-spacing:.5px;}
-  .start-btn{margin-top:36px;padding:16px 52px;background:var(--ink);color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;transition:background .25s,transform .15s,box-shadow .25s;}
-  .start-btn:hover{background:var(--terracotta);transform:translateY(-2px);box-shadow:0 12px 32px rgba(196,97,58,.3);}
+  .start-btn{margin-top:36px;padding:16px 52px;background:var(--ink);color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:background .25s,transform .15s,box-shadow .25s;}
+  .start-btn:active{background:var(--terracotta);transform:scale(.96);}
+  @media (hover:hover) and (pointer:fine){
+    .start-btn:hover{background:var(--terracotta);transform:translateY(-2px);box-shadow:0 12px 32px rgba(196,97,58,.3);}
+  }
 
   /* ─── MCQ SCREEN ─── */
   #quiz-screen{z-index:10;background:transparent;}
@@ -72,17 +81,27 @@
   .spec-option-label{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--ink);line-height:1.35;padding:0 6px;}
   .spec-option-sub{font-size:10px;color:rgba(26,22,20,.45);margin-top:3px;font-style:italic;}
   .spec-dots{display:flex;gap:10px;align-items:center;justify-content:center;flex:0 0 auto;padding:0 10px;}
-  .spec-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--ink);background:transparent;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;flex-shrink:0;}
-  .spec-dot:hover{transform:scale(1.25);box-shadow:0 0 0 4px rgba(26,22,20,.12);}
+  .spec-dot{position:relative;width:20px;height:20px;border-radius:50%;border:2px solid var(--ink);background:transparent;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:background .2s,transform .15s,box-shadow .2s;flex-shrink:0;}
+  /* Invisible hit-area extends the actual tap target to ~30px without
+     changing how the dot looks, sized so neighbouring dots' hit areas
+     (10px gap apart) never overlap. */
+  .spec-dot::after{content:'';position:absolute;inset:-5px;}
+  .spec-dot:active{transform:scale(1.15);}
   .spec-dot.selected{background:var(--ink);transform:scale(1.3);}
+  @media (hover:hover) and (pointer:fine){
+    .spec-dot:hover{transform:scale(1.25);box-shadow:0 0 0 4px rgba(26,22,20,.12);}
+  }
   .spec-dot[data-val="1"].selected,.spec-dot[data-val="2"].selected{background:#c4613a;}
   .spec-dot[data-val="4"].selected,.spec-dot[data-val="5"].selected{background:#4a8f8a;}
   .spec-dot[data-val="3"].selected{background:#8a7faa;}
 
   /* Next */
-  .next-btn{margin-top:22px;padding:13px 44px;background:var(--ink);color:var(--cream);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;opacity:.4;pointer-events:none;transition:opacity .25s,background .2s,transform .15s;}
+  .next-btn{margin-top:22px;padding:13px 44px;background:var(--ink);color:var(--cream);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;opacity:.4;pointer-events:none;transition:opacity .25s,background .2s,transform .15s;}
   .next-btn.ready{opacity:1;pointer-events:all;}
-  .next-btn.ready:hover{background:var(--terracotta);transform:translateY(-2px);}
+  .next-btn.ready:active{background:var(--terracotta);transform:scale(.96);}
+  @media (hover:hover) and (pointer:fine){
+    .next-btn.ready:hover{background:var(--terracotta);transform:translateY(-2px);}
+  }
 
   /* Q counter */
   .q-counter{font-size:11px;font-weight:500;color:rgba(26,22,20,.4);letter-spacing:.8px;margin-bottom:6px;}
@@ -109,8 +128,11 @@
   .axis-scale-letter.dim{background:transparent;border-color:rgba(26,22,20,.25);color:rgba(26,22,20,.4);}
   .axis-scale-track{position:relative;flex:1;height:6px;border-radius:4px;background:rgba(26,22,20,.1);overflow:visible;}
   .axis-scale-marker{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 4px rgba(0,0,0,.06);transition:left .6s cubic-bezier(.2,.8,.3,1);}
-  .restart-btn{padding:14px 48px;background:var(--ink);color:var(--cream);font-size:13px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;transition:background .25s;}
-  .restart-btn:hover{background:var(--terracotta);}
+  .restart-btn{padding:14px 48px;background:var(--ink);color:var(--cream);font-size:13px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:background .25s,transform .15s;}
+  .restart-btn:active{background:var(--terracotta);transform:scale(.96);}
+  @media (hover:hover) and (pointer:fine){
+    .restart-btn:hover{background:var(--terracotta);}
+  }
   .result-tagline{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(26,22,20,.35);margin-bottom:12px;}
 
   /* ─── AXIS ANIMATIONS ─── */
@@ -157,6 +179,28 @@
   @keyframes geom-spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
   @keyframes geom-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
   @keyframes geom-draw{0%{stroke-dashoffset:400;}100%{stroke-dashoffset:0;}}
+
+  /* ─── MOBILE TUNING ───
+     Tighter padding and slightly denser spacing for phone-width screens,
+     where the desktop-tuned padding/gaps eat too much of the available
+     width. Placed last so it wins the cascade at these widths. */
+  @media (max-width:480px){
+    .quiz-wrap{padding:20px 16px;}
+    .result-wrap{padding:32px 20px;}
+    .spec-dots{gap:8px;}
+    .spec-option-label{padding:0 3px;}
+    .result-header-row{gap:10px;}
+  }
+  /* Smallest phones (e.g. iPhone SE-class, 375px and narrower): the huge
+     display type is the site's whole visual identity, so we don't shrink
+     it away — just trim its floor a bit further so a long personality
+     name (e.g. "The Community Champion") wraps to two clean lines
+     instead of pushing up against the screen edges. */
+  @media (max-width:375px){
+    .result-name{font-size:clamp(28px,9vw,76px);}
+    .result-code{font-size:clamp(22px,7vw,52px);letter-spacing:3px;}
+    .start-title{font-size:clamp(48px,13vw,110px);}
+  }
 </style>
 </head>
 <body>
@@ -239,8 +283,17 @@ function makeColor(template){
   return template.replace('VAL',a);
 }
 
+// Bubble size/count tuned per viewport: the original 40–120px range and
+// 14-bubble count were sized for desktop and read as oversized, overlapping
+// blobs on a 375–430px phone screen — this keeps the same ambient effect
+// at a scale (and count) that fits a small screen and is lighter to animate.
+const IS_MOBILE_VIEWPORT = window.innerWidth <= 480;
+const BUBBLE_COUNT = IS_MOBILE_VIEWPORT ? 9 : 14;
+const BUBBLE_MIN_SIZE = IS_MOBILE_VIEWPORT ? 26 : 40;
+const BUBBLE_SIZE_RANGE = IS_MOBILE_VIEWPORT ? 46 : 80;
+
 function spawnBubble(x,y){
-  const size = Math.random()*80+40;
+  const size = Math.random()*BUBBLE_SIZE_RANGE+BUBBLE_MIN_SIZE;
   const color = BUBBLE_COLORS[Math.floor(Math.random()*BUBBLE_COLORS.length)];
   const el = document.createElement('div');
   el.className = 'bubble';
@@ -305,7 +358,7 @@ function animateBubbles(){
 }
 
 function initBubbles(){
-  for(let i=0;i<14;i++) spawnBubble();
+  for(let i=0;i<BUBBLE_COUNT;i++) spawnBubble();
   animateBubbles();
 }
 initBubbles();
