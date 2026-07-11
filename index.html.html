@@ -8,21 +8,40 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>AND you — Architecture Personality Quiz</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&family=Anton&family=Space+Grotesk:wght@700&family=Bebas+Neue&family=Fraunces:ital,wght@0,900&family=Archivo+Black&family=Syne:wght@800&family=Unbounded:wght@800&family=Cormorant+Garamond:wght@700&family=Righteous&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<!--
+  Font notes:
+  - "Annonce" (Canada Type) and "Neue Montreal" / "Adieu" (Pangram Pangram) are paid,
+    non-Google fonts. They can't legally be embedded here without a purchased license,
+    so the CSS below references them BY NAME FIRST — if you later self-host the licensed
+    files (an @font-face block with that exact family name), they'll be picked up
+    automatically with no other changes needed. Until then, the page falls back to the
+    closest free look-alikes: Anton (for Annonce) and Inter (for Neue Montreal/Adieu).
+-->
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   :root{
     --cream:#f5f0eb;
     --ink:#1a1614;
-    --terracotta:#c4613a;
-    --sage:#6b8f71;
-    --dusty-rose:#c48b7a;
-    --slate:#5a6e7a;
-    --amber:#d4a04a;
-    --lavender:#8a7faa;
-    --teal:#4a8f8a;
+    /* ── Fonts ── */
+    --font-display:'Annonce','Anton',Impact,sans-serif;              /* big bold words */
+    --font-body:'Neue Montreal','Adieu','Inter','DM Sans',sans-serif; /* every other small text */
+    /* ── 11-colour palette (from the supplied swatch) ──
+       Renamed the old accent variables to keep every existing usage in this
+       file working, but every value now comes directly from the 11 swatches. */
+    --pink:#fecdc9;
+    --cyan:#09b2d9;
+    --amber:#ffd73f;
+    --teal:#017f7e;
+    --terracotta:#ff6c00;
+    --sage:#31743f;
+    --dusty-rose:#ea3568;
+    --lavender:#9e2c6a;
+    --brick:#b04346;
+    --slate:#303078;
+    --maroon:#801016;
   }
-  html,body{width:100%;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;background:var(--cream);font-family:'DM Sans',sans-serif;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  html,body{width:100%;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;background:var(--cream);font-family:var(--font-body);-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 
   /* ─── SCREENS ─── */
   .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;justify-content:safe center;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);transition:opacity .5s ease,transform .5s ease;opacity:0;pointer-events:none;transform:translateY(20px);}
@@ -46,16 +65,30 @@
      empty background area fall through to the bubbles. */
   #start-screen.active{pointer-events:none;}
   .start-content{position:relative;z-index:2;text-align:center;padding:40px;pointer-events:auto;}
-  .start-title{font-family:'Playfair Display',serif;font-size:clamp(60px,10vw,110px);font-weight:900;line-height:.95;color:var(--ink);letter-spacing:-2px;}
-  .start-title em{font-style:italic;color:var(--terracotta);}
-  .start-subtitle{font-family:'DM Serif Display',serif;font-size:clamp(16px,2.5vw,24px);color:var(--slate);margin-top:16px;font-style:italic;}
-  .start-desc{font-family:'DM Sans',sans-serif;font-size:13px;color:#7a6e68;margin-top:18px;max-width:360px;line-height:1.7;letter-spacing:.3px;}
+  /* Fixed-height flex box, independent of any single cycling font's own
+     ascent/descent metrics. Previously the title was a plain inline line —
+     each of the 11 cycle fonts has different vertical metrics, so even with
+     an identical line-height multiplier the *rendered* line-box height
+     changed font-to-font, growing/shrinking the whole start-content block
+     and shoving the subtitle/desc/pills/button up and down every .2s.
+     Giving the title an explicit height + flex centering means the box's
+     footprint never changes — any extra glyph height from a tall font just
+     overflows visually (overflow:visible) instead of resizing the layout.
+     margin-bottom below adds breathing room ("distance") to the next line
+     so that visual overflow never touches the subtitle either. */
+  .start-title{font-family:var(--font-display);font-size:clamp(60px,10vw,110px);font-weight:900;line-height:1;color:var(--ink);letter-spacing:-2px;display:flex;align-items:center;justify-content:center;gap:.18em;height:clamp(76px,13vw,132px);overflow:visible;margin-bottom:14px;}
+  /* "you" cycles through 11 fonts + 11 colours every .2s via JS (see cycleYouText).
+     font-style is forced to normal here since several of the 11 cycle fonts have
+     no italic cut, and size/weight are held fixed by the parent .start-title rule. */
+  .you-cycle{font-style:normal;display:inline-block;line-height:1;}
+  .start-subtitle{font-family:var(--font-body);font-size:clamp(16px,2.5vw,24px);color:var(--slate);margin-top:16px;font-style:italic;}
+  .start-desc{font-family:var(--font-body);font-size:13px;color:#7a6e68;margin-top:18px;max-width:360px;line-height:1.7;letter-spacing:.3px;}
   .start-pills{display:flex;gap:16px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
-  .pill{background:rgba(255,255,255,.55);backdrop-filter:blur(8px);border:1px solid rgba(196,97,58,.25);border-radius:40px;padding:7px 18px;font-size:12px;font-weight:600;color:var(--terracotta);letter-spacing:.5px;}
-  .start-btn{margin-top:36px;padding:16px 52px;background:var(--ink);color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:background .25s,transform .15s,box-shadow .25s;}
+  .pill{background:rgba(255,255,255,.55);backdrop-filter:blur(8px);border:1px solid rgba(255,108,0,.25);border-radius:40px;padding:7px 18px;font-size:12px;font-weight:600;color:var(--terracotta);letter-spacing:.5px;}
+  .start-btn{margin-top:36px;padding:16px 52px;background:var(--ink);color:var(--cream);font-family:var(--font-body);font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:background .25s,transform .15s,box-shadow .25s;}
   .start-btn:active{background:var(--terracotta);transform:scale(.96);}
   @media (hover:hover) and (pointer:fine){
-    .start-btn:hover{background:var(--terracotta);transform:translateY(-2px);box-shadow:0 12px 32px rgba(196,97,58,.3);}
+    .start-btn:hover{background:var(--terracotta);transform:translateY(-2px);box-shadow:0 12px 32px rgba(255,108,0,.3);}
   }
 
   /* ─── MCQ SCREEN ─── */
@@ -69,7 +102,7 @@
   .axis-label{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(26,22,20,.5);margin-bottom:8px;}
 
   /* Question */
-  .question-text{font-family:'Playfair Display',serif;font-size:clamp(17px,2.8vw,23px);font-weight:700;text-align:center;color:var(--ink);line-height:1.45;max-width:580px;margin-bottom:18px;}
+  .question-text{font-family:var(--font-display);font-size:clamp(17px,2.8vw,23px);font-weight:700;text-align:center;color:var(--ink);line-height:1.45;max-width:580px;margin-bottom:18px;}
 
   /* Geometry */
   .geom-stage{width:160px;height:120px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
@@ -78,7 +111,7 @@
   /* Spectrum */
   .spectrum-row{width:100%;display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:0;}
   .spec-option{flex:1;text-align:center;}
-  .spec-option-label{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--ink);line-height:1.35;padding:0 6px;}
+  .spec-option-label{font-family:var(--font-body);font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--ink);line-height:1.35;padding:0 6px;}
   .spec-option-sub{font-size:10px;color:rgba(26,22,20,.45);margin-top:3px;font-style:italic;}
   .spec-dots{display:flex;gap:10px;align-items:center;justify-content:center;flex:0 0 auto;padding:0 10px;}
   .spec-dot{position:relative;width:20px;height:20px;border-radius:50%;border:2px solid var(--ink);background:transparent;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:background .2s,transform .15s,box-shadow .2s;flex-shrink:0;}
@@ -91,12 +124,12 @@
   @media (hover:hover) and (pointer:fine){
     .spec-dot:hover{transform:scale(1.25);box-shadow:0 0 0 4px rgba(26,22,20,.12);}
   }
-  .spec-dot[data-val="1"].selected,.spec-dot[data-val="2"].selected{background:#c4613a;}
-  .spec-dot[data-val="4"].selected,.spec-dot[data-val="5"].selected{background:#4a8f8a;}
-  .spec-dot[data-val="3"].selected{background:#8a7faa;}
+  .spec-dot[data-val="1"].selected,.spec-dot[data-val="2"].selected{background:var(--terracotta);}
+  .spec-dot[data-val="4"].selected,.spec-dot[data-val="5"].selected{background:var(--teal);}
+  .spec-dot[data-val="3"].selected{background:var(--lavender);}
 
   /* Next */
-  .next-btn{margin-top:22px;padding:13px 44px;background:var(--ink);color:var(--cream);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;opacity:.4;pointer-events:none;transition:opacity .25s,background .2s,transform .15s;}
+  .next-btn{margin-top:22px;padding:13px 44px;background:var(--ink);color:var(--cream);font-family:var(--font-body);font-size:13px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;opacity:.4;pointer-events:none;transition:opacity .25s,background .2s,transform .15s;}
   .next-btn.ready{opacity:1;pointer-events:all;}
   .next-btn.ready:active{background:var(--terracotta);transform:scale(.96);}
   @media (hover:hover) and (pointer:fine){
@@ -108,19 +141,28 @@
 
   /* ─── RESULT SCREEN ─── */
   #result-screen{z-index:10;background:var(--cream);overflow-y:auto;transition:background 1s ease;}
-  .result-bg-pattern{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+  /* opacity dropped so the decorative pattern reads as a faint texture
+     rather than competing with the text sitting on top of it */
+  .result-bg-pattern{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;opacity:.45;}
   .result-bg-pattern svg{display:block;width:100%;height:100%;}
   .result-avatar-wrap{position:relative;z-index:2;width:clamp(118px,20vw,164px);height:clamp(118px,20vw,164px);margin-bottom:16px;border-radius:50%;overflow:hidden;background:#fff;border:3px solid var(--ink);opacity:0;transform:scale(.82);animation:avatar-in .55s cubic-bezier(.2,.8,.3,1) .05s forwards;}
   .result-avatar-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
   @keyframes avatar-in{to{opacity:1;transform:scale(1);}}
   .result-wrap{position:relative;z-index:2;width:100%;max-width:680px;padding:40px 32px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0;}
-  .result-header-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px;flex-wrap:wrap;}
-  .result-name{font-family:'Playfair Display',serif;font-size:clamp(36px,8vw,76px);font-weight:900;color:var(--ink);line-height:1.02;}
-  .result-geom{width:clamp(56px,9vw,88px);height:clamp(56px,9vw,88px);flex-shrink:0;}
+  .result-header-row{display:flex;align-items:center;justify-content:center;width:100%;margin-bottom:6px;}
+  /* Single line, centered — name no longer shares a grid row with the
+     geometry, and nowrap + the JS auto-fit below (fitResultName) keeps
+     even the longest personality names ("The Community Champion") on
+     one line instead of wrapping into two. */
+  .result-name{font-family:var(--font-display);font-size:clamp(30px,7.5vw,76px);font-weight:900;color:var(--ink);line-height:1.02;text-align:center;white-space:nowrap;max-width:100%;}
+  /* Acronym + its matching animated geometry, geometry to the RIGHT of the
+     acronym, the pair centered together as one unit. */
+  .result-code-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px;}
+  .result-geom{width:clamp(38px,7vw,58px);height:clamp(38px,7vw,58px);flex-shrink:0;}
   .result-geom svg{width:100%;height:100%;overflow:visible;}
-  .result-code{font-family:'Playfair Display',serif;font-size:clamp(26px,5.5vw,52px);font-weight:900;color:var(--terracotta);letter-spacing:5px;line-height:1;margin-bottom:8px;}
-  .result-code-meaning{font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:#8a7d74;margin-bottom:22px;max-width:420px;}
-  .result-quote{font-family:'DM Serif Display',serif;font-style:italic;font-size:15px;color:var(--terracotta);margin-bottom:22px;}
+  .result-code{font-family:var(--font-display);font-size:clamp(26px,5.5vw,52px);font-weight:900;color:var(--terracotta);letter-spacing:5px;line-height:1;}
+  .result-code-meaning{font-family:var(--font-body);font-size:12.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:#8a7d74;margin-bottom:22px;max-width:420px;}
+  .result-quote{font-family:var(--font-body);font-style:italic;font-size:15px;color:var(--terracotta);margin-bottom:22px;}
   .result-desc{font-size:14px;line-height:1.8;color:#5a504a;max-width:480px;margin-bottom:28px;}
   .result-axes{width:100%;max-width:380px;display:flex;flex-direction:column;gap:16px;margin-bottom:32px;}
   .axis-scale{display:flex;align-items:center;gap:10px;}
@@ -128,7 +170,7 @@
   .axis-scale-letter.dim{background:transparent;border-color:rgba(26,22,20,.25);color:rgba(26,22,20,.4);}
   .axis-scale-track{position:relative;flex:1;height:6px;border-radius:4px;background:rgba(26,22,20,.1);overflow:visible;}
   .axis-scale-marker{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 4px rgba(0,0,0,.06);transition:left .6s cubic-bezier(.2,.8,.3,1);}
-  .restart-btn{padding:14px 48px;background:var(--ink);color:var(--cream);font-size:13px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:background .25s,transform .15s;}
+  .restart-btn{padding:14px 48px;background:var(--ink);color:var(--cream);font-family:var(--font-body);font-size:13px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:background .25s,transform .15s;}
   .restart-btn:active{background:var(--terracotta);transform:scale(.96);}
   @media (hover:hover) and (pointer:fine){
     .restart-btn:hover{background:var(--terracotta);}
@@ -189,17 +231,17 @@
     .result-wrap{padding:32px 20px;}
     .spec-dots{gap:8px;}
     .spec-option-label{padding:0 3px;}
-    .result-header-row{gap:10px;}
+    .result-code-row{gap:8px;}
   }
   /* Smallest phones (e.g. iPhone SE-class, 375px and narrower): the huge
      display type is the site's whole visual identity, so we don't shrink
-     it away — just trim its floor a bit further so a long personality
-     name (e.g. "The Community Champion") wraps to two clean lines
-     instead of pushing up against the screen edges. */
+     it away — just trim its floor a bit further. The name still needs to
+     fit on one line at this width, so the lower clamp bound is dropped
+     further here and fitResultName() (JS) does the final fine-tuning. */
   @media (max-width:375px){
-    .result-name{font-size:clamp(28px,9vw,76px);}
+    .result-name{font-size:clamp(20px,9vw,76px);}
     .result-code{font-size:clamp(22px,7vw,52px);letter-spacing:3px;}
-    .start-title{font-size:clamp(48px,13vw,110px);}
+    .start-title{font-size:clamp(48px,13vw,110px);height:clamp(54px,15vw,132px);}
   }
 </style>
 </head>
@@ -211,7 +253,7 @@
 <!-- ═══════════ START SCREEN ═══════════ -->
 <div class="screen active" id="start-screen">
   <div class="start-content">
-    <div class="start-title">AND <em>you</em></div>
+    <div class="start-title"><span class="and-text">AND</span><span class="you-cycle" id="you-cycle">you</span></div>
     <div class="start-subtitle">What kind of architect are you?</div>
     <div class="start-desc">12 questions. 9 possible personalities. Discover your design identity and where you sit in the architecture studio ecosystem.</div>
     <div class="start-pills">
@@ -254,10 +296,12 @@
     <div class="result-tagline">Your Architecture Identity</div>
     <div class="result-avatar-wrap" id="result-avatar-wrap"><img id="result-avatar" src="" alt=""/></div>
     <div class="result-header-row">
-      <div class="result-geom" id="result-geom"></div>
       <div class="result-name" id="result-name"></div>
     </div>
-    <div class="result-code" id="result-code"></div>
+    <div class="result-code-row">
+      <div class="result-code" id="result-code"></div>
+      <div class="result-geom" id="result-geom"></div>
+    </div>
     <div class="result-code-meaning" id="result-code-meaning"></div>
     <div class="result-quote" id="result-quote"></div>
     <div class="result-desc" id="result-desc"></div>
@@ -271,9 +315,10 @@
 // BUBBLE SYSTEM
 // ═══════════════════════════════════════════
 const BUBBLE_COLORS = [
-  'rgba(196,97,58,VAL)','rgba(107,143,113,VAL)','rgba(196,139,122,VAL)',
-  'rgba(90,110,122,VAL)','rgba(212,160,74,VAL)','rgba(138,127,170,VAL)',
-  'rgba(74,143,138,VAL)','rgba(180,120,80,VAL)','rgba(120,160,140,VAL)'
+  'rgba(255,108,0,VAL)',  'rgba(49,116,63,VAL)',  'rgba(234,53,104,VAL)',
+  'rgba(48,48,120,VAL)',  'rgba(255,215,63,VAL)', 'rgba(158,44,106,VAL)',
+  'rgba(1,127,126,VAL)',  'rgba(254,205,201,VAL)','rgba(9,178,217,VAL)',
+  'rgba(176,67,70,VAL)',  'rgba(128,16,22,VAL)'
 ];
 const bubbleCanvas = document.getElementById('bubble-canvas');
 let bubbles = [];
@@ -283,14 +328,13 @@ function makeColor(template){
   return template.replace('VAL',a);
 }
 
-// Bubble size/count tuned per viewport: the original 40–120px range and
-// 14-bubble count were sized for desktop and read as oversized, overlapping
-// blobs on a 375–430px phone screen — this keeps the same ambient effect
-// at a scale (and count) that fits a small screen and is lighter to animate.
+// Bubble size/count tuned per viewport. Sized up (bigger + a few more on
+// desktop) per request while keeping mobile proportional so bubbles still
+// read as ambient background rather than covering the content.
 const IS_MOBILE_VIEWPORT = window.innerWidth <= 480;
 const BUBBLE_COUNT = IS_MOBILE_VIEWPORT ? 9 : 14;
-const BUBBLE_MIN_SIZE = IS_MOBILE_VIEWPORT ? 26 : 40;
-const BUBBLE_SIZE_RANGE = IS_MOBILE_VIEWPORT ? 46 : 80;
+const BUBBLE_MIN_SIZE = IS_MOBILE_VIEWPORT ? 55 : 90;
+const BUBBLE_SIZE_RANGE = IS_MOBILE_VIEWPORT ? 100 : 170;
 
 function spawnBubble(x,y){
   const size = Math.random()*BUBBLE_SIZE_RANGE+BUBBLE_MIN_SIZE;
@@ -329,7 +373,7 @@ function burstBubble(bubble, e){
       position:absolute;width:${ms}px;height:${ms}px;border-radius:50%;
       left:${cx-ms/2}px;top:${cy-ms/2}px;
       background:radial-gradient(circle at 35% 35%, ${makeColor(BUBBLE_COLORS[Math.floor(Math.random()*BUBBLE_COLORS.length)])}, transparent);
-      box-shadow:0 0 ${ms}px rgba(196,97,58,.2);
+      box-shadow:0 0 ${ms}px rgba(255,108,0,.2);
       pointer-events:none;transition:transform .7s cubic-bezier(.2,.8,.3,1),opacity .7s ease;
       opacity:1;
     `;
@@ -362,6 +406,37 @@ function initBubbles(){
   animateBubbles();
 }
 initBubbles();
+
+// ═══════════════════════════════════════════
+// "you" — CONSTANT FONT + COLOUR CYCLE
+// Cycles the "you" in "ANDyou" through 11 fonts and the 11 swatch colours,
+// switching every 200ms. Size/weight/position stay fixed (set once on
+// .start-title / .you-cycle in CSS) — only font-family and color change.
+// ═══════════════════════════════════════════
+const CYCLE_FONTS = [
+  "'Playfair Display',serif",
+  "'Anton',sans-serif",
+  "'Space Grotesk',sans-serif",
+  "'Bebas Neue',sans-serif",
+  "'Fraunces',serif",
+  "'Archivo Black',sans-serif",
+  "'DM Serif Display',serif",
+  "'Syne',sans-serif",
+  "'Unbounded',sans-serif",
+  "'Cormorant Garamond',serif",
+  "'Righteous',sans-serif"
+];
+const CYCLE_COLORS = ['#fecdc9','#09b2d9','#ffd73f','#017f7e','#ff6c00','#31743f','#ea3568','#9e2c6a','#b04346','#303078','#801016'];
+let youCycleIdx = 0;
+function cycleYouText(){
+  const el = document.getElementById('you-cycle');
+  if(!el) return;
+  youCycleIdx = (youCycleIdx+1) % CYCLE_FONTS.length;
+  el.style.fontFamily = CYCLE_FONTS[youCycleIdx];
+  el.style.color = CYCLE_COLORS[youCycleIdx];
+}
+cycleYouText();
+setInterval(cycleYouText, 200);
 
 // ═══════════════════════════════════════════
 // QUIZ DATA
@@ -442,31 +517,31 @@ const AVATARS = {
 // personality's code as a target on the four continuous axis scores,
 // so the closest-fitting personality wins even for in-between answers.
 const personalities = [
-  {key:"eco",code:"FSCL",emoji:"🌿",name:"The Eco Protector",icon:"leaf",color:"#6b8f71",avatar:AVATARS.eco,
+  {key:"eco",code:"FSCL",emoji:"🌿",name:"The Eco Protector",icon:"leaf",color:"#31743f",avatar:AVATARS.eco,
    quote:"Design with purpose, leave the world better.",
    desc:"The Eco Protector believes every design should have a positive impact on people and the planet. They're thoughtful, patient, and rarely chase flashy ideas just for attention. In studio, they're the one researching sustainable materials, daylight strategies, and adaptive reuse while everyone else is still mood-boarding."},
-  {key:"grid",code:"PSHL",emoji:"📐",name:"The Grid Master",icon:"grid",color:"#5a6e7a",avatar:AVATARS.grid,
+  {key:"grid",code:"PSHL",emoji:"📐",name:"The Grid Master",icon:"grid",color:"#303078",avatar:AVATARS.grid,
    quote:"Everything has its place.",
    desc:"The Grid Master thrives on order, precision, and consistency. They love clean layouts, modular systems, and perfectly aligned drawings. In studio, they're the person everyone asks for CAD help because their files are colour-coded, layered correctly, and somehow never crash."},
-  {key:"tech",code:"FSHA",emoji:"🚀",name:"The Tech Futurist",icon:"rocket",color:"#c4613a",avatar:AVATARS.tech,
+  {key:"tech",code:"FSHA",emoji:"🚀",name:"The Tech Futurist",icon:"rocket",color:"#09b2d9",avatar:AVATARS.tech,
    quote:"There's probably a plugin for that.",
    desc:"The Tech Futurist is always chasing the next big thing in design. Whether it's AI rendering, parametric modelling, robotics, or computational workflows, they're usually the first to try new tools. They're constantly watching tutorials, experimenting with software, and wondering how technology will shape architecture's future."},
-  {key:"community",code:"PECL",emoji:"🤝",name:"The Community Champion",icon:"hands",color:"#d4a04a",avatar:AVATARS.community,
+  {key:"community",code:"PECL",emoji:"🤝",name:"The Community Champion",icon:"hands",color:"#ffd73f",avatar:AVATARS.community,
    quote:"Design starts with people.",
    desc:"The Community Champion believes the best projects are the ones that improve everyday life. They're approachable, collaborative, and often the glue holding group projects together. They're the friend everyone asks for feedback before submission."},
-  {key:"realist",code:"PSCL",emoji:"⚪",name:"The Realist",icon:"circle",color:"#7a6e68",avatar:AVATARS.realist,
+  {key:"realist",code:"PSCL",emoji:"⚪",name:"The Realist",icon:"circle",color:"#b04346",avatar:AVATARS.realist,
    quote:"If it can't be built, why design it?",
    desc:"The Realist is practical, grounded, and quietly dependable. They don't get distracted by trends or overly conceptual ideas — they simply want designs that work. In studio, they're usually calm during crits because they've thought through construction and feasibility long before presentation day."},
-  {key:"illusionist",code:"PEHA",emoji:"🎭",name:"The Illusionist",icon:"mask",color:"#8a7faa",avatar:AVATARS.illusionist,
+  {key:"illusionist",code:"PEHA",emoji:"🎭",name:"The Illusionist",icon:"mask",color:"#9e2c6a",avatar:AVATARS.illusionist,
    quote:"Design is about creating an experience.",
    desc:"The Illusionist sees design as storytelling. They obsess over atmosphere, lighting, materials, and the emotions a space creates. Their studio desk is filled with concept sketches, cinematic references, and beautiful renders that make everyone stop and stare."},
-  {key:"dreamer",code:"FECA",emoji:"🌙",name:"The Dreamer",icon:"moon",color:"#4a8f8a",avatar:AVATARS.dreamer,
+  {key:"dreamer",code:"FECA",emoji:"🌙",name:"The Dreamer",icon:"moon",color:"#017f7e",avatar:AVATARS.dreamer,
    quote:"What if...?",
    desc:"The Dreamer has an imagination that never switches off. They're constantly sketching impossible ideas, filling notebooks with concepts, and asking questions no one else thought to ask. Inspiration tends to arrive at 2 a.m., so late nights are practically part of their process."},
-  {key:"rulebreaker",code:"PEHL",emoji:"⚡",name:"The Rule Breaker",icon:"bolt",color:"#c48b7a",avatar:AVATARS.rulebreaker,
+  {key:"rulebreaker",code:"PEHL",emoji:"⚡",name:"The Rule Breaker",icon:"bolt",color:"#ea3568",avatar:AVATARS.rulebreaker,
    quote:"Who says it has to be done that way?",
    desc:"The Rule Breaker challenges conventions simply because they believe there's always another way. They're confident, independent, and enjoy surprising tutors with unexpected solutions, ignoring the suggested workflow to experiment with unusual materials."},
-  {key:"mad",code:"FEHA",emoji:"🧠",name:"The Mad Architect",icon:"brain",color:"#c4613a",avatar:AVATARS.mad,
+  {key:"mad",code:"FEHA",emoji:"🧠",name:"The Mad Architect",icon:"brain",color:"#ff6c00",avatar:AVATARS.mad,
    quote:"Chaos is just creativity moving too fast.",
    desc:"The Mad Architect lives in a constant state of creative overload. Their browser has 300 tabs open, half their desk is covered in sketches, and every conversation somehow turns into a new design idea — fueled by caffeine, instant noodles, and accidental all-nighters."},
 ];
@@ -478,34 +553,34 @@ function getFPGeom(dur){
       <filter id="fp-blur"><feGaussianBlur stdDeviation="1.5"/></filter>
     </defs>
     <!-- main thought bubble circles -->
-    <circle cx="60" cy="72" r="24" fill="none" stroke="#c4613a" stroke-width="2" opacity=".7">
+    <circle cx="60" cy="72" r="24" fill="none" stroke="#ff6c00" stroke-width="2" opacity=".7">
       <animate attributeName="cx" values="60;58;62;60" dur="${dur}s" repeatCount="indefinite"/>
       <animate attributeName="cy" values="72;68;74;72" dur="${dur}s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="80" cy="66" r="20" fill="none" stroke="#c4613a" stroke-width="2" opacity=".6">
+    <circle cx="80" cy="66" r="20" fill="none" stroke="#ff6c00" stroke-width="2" opacity=".6">
       <animate attributeName="cx" values="80;83;77;80" dur="${dur*.9}s" repeatCount="indefinite"/>
       <animate attributeName="cy" values="66;70;63;66" dur="${dur*.9}s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="70" cy="56" r="17" fill="none" stroke="#c4613a" stroke-width="2" opacity=".6">
+    <circle cx="70" cy="56" r="17" fill="none" stroke="#ff6c00" stroke-width="2" opacity=".6">
       <animate attributeName="cx" values="70;67;73;70" dur="${dur*1.1}s" repeatCount="indefinite"/>
       <animate attributeName="cy" values="56;53;59;56" dur="${dur*1.1}s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="96" cy="62" r="14" fill="none" stroke="#c4613a" stroke-width="1.5" opacity=".5">
+    <circle cx="96" cy="62" r="14" fill="none" stroke="#ff6c00" stroke-width="1.5" opacity=".5">
       <animate attributeName="cx" values="96;99;93;96" dur="${dur*.8}s" repeatCount="indefinite"/>
       <animate attributeName="cy" values="62;59;65;62" dur="${dur*.8}s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="55" cy="60" r="13" fill="none" stroke="#c4613a" stroke-width="1.5" opacity=".5">
+    <circle cx="55" cy="60" r="13" fill="none" stroke="#ff6c00" stroke-width="1.5" opacity=".5">
       <animate attributeName="cx" values="55;52;58;55" dur="${dur*1.2}s" repeatCount="indefinite"/>
       <animate attributeName="cy" values="60;57;63;60" dur="${dur*1.2}s" repeatCount="indefinite"/>
     </circle>
     <!-- trailing small bubbles -->
-    <circle cx="109" cy="46" r="5" fill="none" stroke="#c4613a" stroke-width="1.5" opacity=".5">
+    <circle cx="109" cy="46" r="5" fill="none" stroke="#ff6c00" stroke-width="1.5" opacity=".5">
       <animate attributeName="cy" values="46;43;49;46" dur="${dur*.7}s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="118" cy="35" r="3.5" fill="none" stroke="#c4613a" stroke-width="1.2" opacity=".4">
+    <circle cx="118" cy="35" r="3.5" fill="none" stroke="#ff6c00" stroke-width="1.2" opacity=".4">
       <animate attributeName="cy" values="35;32;38;35" dur="${dur*.6}s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="125" cy="25" r="2.2" fill="#c4613a" opacity=".35">
+    <circle cx="125" cy="25" r="2.2" fill="#ff6c00" opacity=".35">
       <animate attributeName="cy" values="25;22;28;25" dur="${dur*.5}s" repeatCount="indefinite"/>
     </circle>
   </svg>`;
@@ -513,17 +588,17 @@ function getFPGeom(dur){
 
 function getSEGeom(dur){
   return `<svg width="160" height="120" viewBox="0 0 160 120">
-    <rect x="0" y="0" width="40" height="40" fill="none" stroke="#6b8f71" stroke-width="2" opacity=".7">
+    <rect x="0" y="0" width="40" height="40" fill="none" stroke="#31743f" stroke-width="2" opacity=".7">
       <animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur="${dur}s" repeatCount="indefinite"/>
       <animate attributeName="x" values="30;28;34;30" dur="${dur*.9}s" repeatCount="indefinite"/>
       <animate attributeName="y" values="32;29;35;32" dur="${dur*.9}s" repeatCount="indefinite"/>
     </rect>
-    <rect x="0" y="0" width="38" height="38" fill="none" stroke="#6b8f71" stroke-width="2" opacity=".55">
+    <rect x="0" y="0" width="38" height="38" fill="none" stroke="#31743f" stroke-width="2" opacity=".55">
       <animateTransform attributeName="transform" type="rotate" from="0 60 55" to="-360 60 55" dur="${dur*1.1}s" repeatCount="indefinite"/>
       <animate attributeName="x" values="52;54;49;52" dur="${dur}s" repeatCount="indefinite"/>
       <animate attributeName="y" values="43;46;40;43" dur="${dur}s" repeatCount="indefinite"/>
     </rect>
-    <rect x="0" y="0" width="35" height="35" fill="none" stroke="#6b8f71" stroke-width="1.5" opacity=".5">
+    <rect x="0" y="0" width="35" height="35" fill="none" stroke="#31743f" stroke-width="1.5" opacity=".5">
       <animateTransform attributeName="transform" type="rotate" from="0 45 65" to="360 45 65" dur="${dur*.8}s" repeatCount="indefinite"/>
       <animate attributeName="x" values="44;42;48;44" dur="${dur*1.2}s" repeatCount="indefinite"/>
       <animate attributeName="y" values="58;61;55;58" dur="${dur*1.2}s" repeatCount="indefinite"/>
@@ -546,14 +621,14 @@ function getCHGeom(dur){
     const x2=80+Math.cos(rad)*outer, y2=60+Math.sin(rad)*outer;
     const len = outer-inner;
     lines.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
-      stroke="#5a6e7a" stroke-width="${i%3===0?1.8:1.2}" opacity="${i%3===0?.8:.5}"
+      stroke="#303078" stroke-width="${i%3===0?1.8:1.2}" opacity="${i%3===0?.8:.5}"
       stroke-dasharray="${len}" stroke-dashoffset="${len}">
       <animate attributeName="stroke-dashoffset" values="${len};0;0;${len}" keyTimes="0;0.45;0.75;1" dur="${dur}s" repeatCount="indefinite" begin="${i*0.015}s"/>
     </line>`);
   }
   return `<svg width="160" height="120" viewBox="0 0 160 120">
     <!-- The circle -->
-    <circle cx="80" cy="60" r="26" fill="none" stroke="#5a6e7a" stroke-width="2.5">
+    <circle cx="80" cy="60" r="26" fill="none" stroke="#303078" stroke-width="2.5">
       <animate attributeName="r" values="26;26;0;0;26" keyTimes="0;0.25;0.42;0.78;1" dur="${dur}s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;0.25;0.42;0.78;1" dur="${dur}s" repeatCount="indefinite"/>
     </circle>
@@ -614,7 +689,7 @@ function getLAGeom(qIndex){
   const splatter = LA_SPLATTERS[qIndex % LA_SPLATTERS.length];
   const dur = [3.9,4.6,3.7][qIndex % 3];
   return `<svg width="160" height="120" viewBox="0 0 160 120">
-    <path d="${LA_SQUARE}" fill="none" stroke="#8a7faa" stroke-width="2.5" stroke-linejoin="round">
+    <path d="${LA_SQUARE}" fill="none" stroke="#9e2c6a" stroke-width="2.5" stroke-linejoin="round">
       <animate attributeName="d"
         values="${LA_SQUARE};${splatter};${splatter};${LA_SQUARE}"
         keyTimes="0;0.4;0.7;1"
@@ -630,15 +705,16 @@ function getLAGeom(qIndex){
 }
 
 // ─── AXIS COLOURS ───
-const axisBg = [
-  'linear-gradient(135deg, #fdf5ee 0%, #f5e8d8 100%)',   // F/P warm
-  'linear-gradient(135deg, #eef5ef 0%, #d8eadb 100%)',   // S/E green
-  'linear-gradient(135deg, #eef2f5 0%, #d8e4ec 100%)',   // C/H slate
-  'linear-gradient(135deg, #f2eef5 0%, #e4d8ec 100%)',   // L/A lavender
-];
+// axisColors picks 4 of the 11 swatch colours (one per axis); axisBg is a
+// soft light-tint gradient generated FROM those same 4 colours (via
+// personalityBg(), a function declaration further down — function
+// declarations are hoisted, so it's safe to call here) instead of using an
+// independent hardcoded palette, so the MCQ question backgrounds are always
+// sourced from the 11-colour palette.
+const axisColors = ['#ff6c00','#31743f','#303078','#9e2c6a'];
+const axisBg = axisColors.map(c=>personalityBg(c));
 const axisNames = ['Future Thinking vs Past Inspired','Systematic vs Expressive','Contextual vs Heroic','Logical vs Abstract'];
 const axisLetters = [['F','P'],['S','E'],['C','H'],['L','A']];
-const axisColors = ['#c4613a','#6b8f71','#5a6e7a','#8a7faa'];
 const letterMeaning = {
   F:'Future Thinking', P:'Past Inspired',
   S:'Systematic',       E:'Expressive',
@@ -736,7 +812,23 @@ function lightenHex(hex, pct){
   return `rgb(${nr},${ng},${nb})`;
 }
 function personalityBg(hex){
-  return `linear-gradient(135deg, ${lightenHex(hex,0.94)} 0%, ${lightenHex(hex,0.8)} 100%)`;
+  // Lightened further (was 0.94/0.8) — combined with the busier line-art
+  // pattern layered on top, the previous tint made body text hard to read.
+  return `linear-gradient(135deg, ${lightenHex(hex,0.97)} 0%, ${lightenHex(hex,0.9)} 100%)`;
+}
+
+// Shrinks .result-name's font-size (in fixed px steps, overriding the CSS
+// clamp inline) until its rendered width fits within its container, so
+// every personality name — including the longest ones — stays on a single
+// centered line instead of wrapping to two.
+function fitResultName(el){
+  const maxWidth = el.parentElement.clientWidth;
+  let size = parseFloat(getComputedStyle(el).fontSize);
+  let guard = 40; // safety cap on iterations
+  while(el.scrollWidth > maxWidth && size > 16 && guard-- > 0){
+    size -= 2;
+    el.style.fontSize = size + 'px';
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -756,7 +848,10 @@ function showResults(){
   document.getElementById('result-code').textContent = pType.code;
   const meaning = pType.code.split('').map(ch=>letterMeaning[ch]).join(', ');
   document.getElementById('result-code-meaning').textContent = `${pType.code} = ${meaning}`;
-  document.getElementById('result-name').textContent = pType.name;
+  const resultNameEl = document.getElementById('result-name');
+  resultNameEl.style.fontSize = ''; // reset any shrink applied on a previous result
+  resultNameEl.textContent = pType.name;
+  fitResultName(resultNameEl);
   document.getElementById('result-quote').textContent = `"${pType.quote}"`;
   document.getElementById('result-desc').textContent = pType.desc;
   document.getElementById('result-geom').innerHTML = getResultGeom(pType.icon, pType.color);
@@ -810,7 +905,7 @@ function pickPersonality(axisAvg){
 
 // ─── RESULT GEOMETRIC ICONS ───
 function getResultGeom(icon, color){
-  const c = color || '#c4613a';
+  const c = color || '#ff6c00';
   const svg = {
     // 🌿 Eco Protector — leaf / tree silhouette, gentle sway
     leaf:`<svg viewBox="0 0 160 160">
@@ -844,7 +939,7 @@ function getResultGeom(icon, color){
         <path d="M-14,0 Q0,-60 14,0" fill="none" stroke="${c}" stroke-width="2"/>
         <path d="M-14,28 L-26,48 L-14,38" fill="none" stroke="${c}" stroke-width="2"/>
         <path d="M14,28 L26,48 L14,38" fill="none" stroke="${c}" stroke-width="2"/>
-        <path d="M-8,36 Q0,58 8,36" fill="none" stroke="#d4a04a" stroke-width="2">
+        <path d="M-8,36 Q0,58 8,36" fill="none" stroke="#ffd73f" stroke-width="2">
           <animate attributeName="d" values="M-8,36 Q0,58 8,36;M-8,36 Q0,66 8,36;M-8,36 Q0,58 8,36" dur=".6s" repeatCount="indefinite"/>
         </path>
       </g>
@@ -917,7 +1012,7 @@ function getResultGeom(icon, color){
 // Futurist, and so on. Kept low-opacity line art so the page stays
 // legible and in the same minimal register as the rest of the quiz.
 function getResultBgPattern(icon, color){
-  const c = color || '#c4613a';
+  const c = color || '#ff6c00';
   const pid = 'bgpat-' + icon;
   const patterns = {
     // 🧠 Mad Architect — scattered twinkling stars + a stray sparkle, space theme
