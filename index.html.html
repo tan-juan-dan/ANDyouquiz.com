@@ -79,8 +79,17 @@
   .start-title{font-family:var(--font-display);font-size:clamp(60px,10vw,110px);font-weight:900;line-height:1;color:var(--ink);letter-spacing:-2px;display:flex;align-items:center;justify-content:center;gap:.18em;height:clamp(76px,13vw,132px);overflow:visible;margin-bottom:14px;}
   /* "you" cycles through 11 fonts + 11 colours every .2s via JS (see cycleYouText).
      font-style is forced to normal here since several of the 11 cycle fonts have
-     no italic cut, and size/weight are held fixed by the parent .start-title rule. */
-  .you-cycle{font-style:normal;display:inline-block;line-height:1;}
+     no italic cut, and size/weight are held fixed by the parent .start-title rule.
+     WIDTH FIX: each of the 11 fonts renders "you" at a different natural width
+     (e.g. condensed Bebas/Anton vs. wide Unbounded/Archivo Black/Righteous). Left
+     as auto-width, that per-font difference changes the title's total content
+     width every .2s, which (a) makes justify-content:center on .start-title slide
+     "AND" left/right, and (b) changes start-content's own shrink-to-fit width,
+     which re-centers everything below it (subtitle/desc/pills/button) too.
+     Giving the span a fixed width + left-aligning the text pins "AND" and the box
+     itself in place; a font whose "you" is wider than the box just overflows
+     visually (overflow:visible on the parent) instead of resizing any layout. */
+  .you-cycle{font-style:normal;display:inline-block;line-height:1;width:1.9em;text-align:left;overflow:visible;white-space:nowrap;}
   .start-subtitle{font-family:var(--font-body);font-size:clamp(16px,2.5vw,24px);color:var(--slate);margin-top:16px;font-style:italic;}
   .start-desc{font-family:var(--font-body);font-size:13px;color:#7a6e68;margin-top:18px;max-width:360px;line-height:1.7;letter-spacing:.3px;}
   .start-pills{display:flex;gap:16px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
