@@ -881,8 +881,21 @@ function showResults(){
   const axesEl = document.getElementById('result-axes');
   axesEl.innerHTML = axisLetters.map((pair,i)=>{
     const [left,right] = pair;
-    const pct = ((axisAvg[i]-1)/4)*100; // 1-5 range -> 0-100%
-    const leansRight = axisAvg[i]>=3;
+    // The highlighted (non-dim) letter must always match the letter that
+    // actually appears in pType.code for this axis — otherwise the sliders
+    // can show a dominant-letter pattern (straight from the user's raw
+    // answers) that doesn't correspond to the printed code above them,
+    // e.g. sliders reading "PECA" while the code says "FECA". pType is
+    // already the closest-matching real personality (see pickPersonality
+    // below), so we drive the highlighting from ITS code rather than the
+    // raw average.
+    const leansRight = pType.code[i]===right;
+    // The marker still reflects how strongly the user actually answered
+    // (0 = neutral, 1 = maximally strong), but is always placed on the
+    // half of the track that matches the highlighted letter above, so the
+    // dot's position never contradicts the code.
+    const intensity = Math.abs(axisAvg[i]-3)/2;
+    const pct = leansRight ? 50+intensity*50 : 50-intensity*50;
     return `<div class="axis-scale">
       <div class="axis-scale-letter${leansRight?' dim':''}" style="background:${leansRight?'transparent':axisColors[i]};border-color:${axisColors[i]};color:${leansRight?axisColors[i]:'#fff'}">${left}</div>
       <div class="axis-scale-track"><div class="axis-scale-marker" style="left:${pct}%;background:${axisColors[i]}"></div></div>
@@ -987,11 +1000,13 @@ function getResultGeom(icon, color){
 
     // 🌙 Dreamer — crescent moon with twinkling stars
     moon:`<svg viewBox="0 0 160 160">
-      <path d="M100,30 A46,46 0 1 0 100,130 A36,36 0 1 1 100,30 Z" fill="${c}" opacity=".85">
-        <animateTransform attributeName="transform" type="rotate" values="0 80 80;8 80 80;0 80 80" dur="5s" repeatCount="indefinite"/>
-      </path>
-      <circle cx="118" cy="42" r="3" fill="${c}"><animate attributeName="opacity" values="1;.2;1" dur="1.8s" repeatCount="indefinite"/></circle>
-      <circle cx="130" cy="60" r="2" fill="${c}"><animate attributeName="opacity" values=".3;1;.3" dur="2.4s" repeatCount="indefinite"/></circle>
+      <g transform="translate(80,80) scale(3.6) translate(-24,-12)">
+        <path d="M16,4 A10,10 0 1 1 16,20 A8.3,8.3 0 0 0 16,4 Z" fill="${c}">
+          <animateTransform attributeName="transform" type="rotate" values="0 24 12;10 24 12;0 24 12" dur="5s" repeatCount="indefinite"/>
+        </path>
+      </g>
+      <circle cx="122" cy="40" r="3" fill="${c}"><animate attributeName="opacity" values="1;.2;1" dur="1.8s" repeatCount="indefinite"/></circle>
+      <circle cx="132" cy="62" r="2" fill="${c}"><animate attributeName="opacity" values=".3;1;.3" dur="2.4s" repeatCount="indefinite"/></circle>
     </svg>`,
 
     // ⚡ Rule Breaker — flickering lightning bolt
